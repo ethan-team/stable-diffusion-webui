@@ -13,6 +13,9 @@ from modules.paths_internal import script_path, extensions_dir
 commandline_args = os.environ.get('COMMANDLINE_ARGS', "")
 sys.argv += shlex.split(commandline_args)
 
+sys.argv.append("--share")
+#sys.argv.append("--debug")
+
 args, _ = cmd_args.parser.parse_known_args()
 
 python = sys.executable
