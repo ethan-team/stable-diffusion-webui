@@ -34,3 +34,9 @@ notification.mp3
 /test/stderr.txt
 /cache.json*
 /config_states/
+
+/models
+/models_x
+/outputs
+/outputs_x
+
