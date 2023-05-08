@@ -1,0 +1,24 @@
+pip install git+https://github.com/xinntao/facexlib.git@v0.2.5
+
+pip install git+https://github.com/huggingface/accelerate.git@v0.18.0
+
+cd ~
+git clone https://github.com/gradio-app/gradio.git
+cd gradio
+git checkout v3.28.1
+cd client/python
+pip install -e .
+cd ~
+
+pip install git+https://github.com/gradio-app/gradio.git@v3.28.1
+
+
+pip install git+https://github.com/xinntao/Real-ESRGAN.git@v0.3.0
+
+pip install git+https://github.com/google-research/torchsde.git@v0.2.2
+
+#pip install git+https://github.com/huggingface/safetensors.git@v0.3.1
+
+pip install git+https://github.com/encode/starlette.git@0.26.0
+
+pip install font-roboto
