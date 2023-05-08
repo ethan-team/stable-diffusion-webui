@@ -70,7 +70,7 @@ def commit_hash():
     return stored_commit_hash
 
 
-def run(command, desc=None, errdesc=None, custom_env=None, live=False):
+def run(command, desc=None, errdesc=None, custom_env=None, live=True):
     if desc is not None:
         print(desc)
 
@@ -120,7 +120,7 @@ def run_python(code, desc=None, errdesc=None):
     return run(f'"{python}" -c "{code}"', desc, errdesc)
 
 
-def run_pip(command, desc=None, live=False):
+def run_pip(command, desc=None, live=True):
     if args.skip_install:
         return
 

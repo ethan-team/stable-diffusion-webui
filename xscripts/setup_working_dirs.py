@@ -26,9 +26,9 @@ class WorkingDirsSetup:
             return True, None
         
         dir_fldname_linked = f"{Symlinks.get_tmp_root()}/{fldname}"
-        if os.path.isdir(dir_fldname_linked):
-            print(f"{dir_fldname_linked} existed already")
-            return False, None
+        #if os.path.isdir(dir_fldname_linked):
+        #    print(f"{dir_fldname_linked} existed already")
+        #    return False, None
         
         os.makedirs(dir_fldname_linked, exist_ok=True)
         os.symlink(dir_fldname_linked, dir_fldname, target_is_directory=True)
