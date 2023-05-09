@@ -17,6 +17,7 @@ exclude =
     test
     textual_inversion_templates
     webui.py
+    repositories
 
 
 max-complexity = 80

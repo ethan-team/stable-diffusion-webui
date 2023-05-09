@@ -18,7 +18,7 @@ def build_args():
     commandline_args = os.environ.get('COMMANDLINE_ARGS', "")
     sys.argv += shlex.split(commandline_args)
 
-    if HackingParams.ADD_ARGS:
+    if HackingParams.need_extra_args():
         sys.argv.append("--share")
         #sys.argv.append("--debug")
         sys.argv.append("--port")
@@ -301,7 +301,7 @@ def prepare_environment():
 
     os.makedirs(os.path.join(script_path, dir_repos), exist_ok=True)
 
-    if HackingParams.UPDATE_GIT_REPO:
+    if HackingParams.need_update_git_repo():
         git_clone(stable_diffusion_repo, repo_dir('stable-diffusion-stability-ai'), "Stable Diffusion", stable_diffusion_commit_hash)
         git_clone(taming_transformers_repo, repo_dir('taming-transformers'), "Taming Transformers", taming_transformers_commit_hash)
         git_clone(k_diffusion_repo, repo_dir('k-diffusion'), "K-diffusion", k_diffusion_commit_hash)
