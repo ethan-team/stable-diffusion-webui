@@ -1,0 +1,22 @@
+[flake8]
+ignore = E501, E302, E231, W293, W292, E128, E122, E265, W291, E711, E226, E225, E402, W391,F403, W391, E261, E262, E228, E111
+exclude = 
+    .github
+    .vscode
+    config
+    embeddings
+    extensions
+    extensions-builtin
+    html
+    javascript
+    localizations
+    models
+    modules
+    outputs
+    scripts
+    test
+    textual_inversion_templates
+    webui.py
+
+
+max-complexity = 80

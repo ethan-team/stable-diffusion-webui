@@ -1,5 +1,5 @@
 import os
-import shutil
+#import shutil
 
 
 DIR_ROOT= os.path.dirname(os.path.dirname(__file__))
@@ -34,12 +34,10 @@ class WorkingDirsSetup:
         os.symlink(dir_fldname_linked, dir_fldname, target_is_directory=True)
         return True, None
 
-
     @classmethod
     def ensure_working_dir(cls):
         cls._make_symlink("models")
         cls._make_symlink("outputs")
-
 
 
 if __name__ == "__main__":
