@@ -36,8 +36,6 @@ notification.mp3
 /config_states/
 
 /models
-/models_x
 /outputs
-/outputs_x
-
 /interrogate_tmp
+/interrogate
