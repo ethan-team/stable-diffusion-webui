@@ -32,7 +32,9 @@ class SymlinkDirsSetup:
                 raise ValueError("setup failed")
 
         if os.path.isdir(dir_symlink_sys):
-            shutil.rmtree(dir_symlink_sys)
+            if not is_symlink_directory(dir_symlink_sys):
+                shutil.rmtree(dir_symlink_sys)
+        print(f"Create symlink from {dir_symlink_sys} to {dir_fldname_linked_dst}")
         os.symlink(dir_fldname_linked_dst, dir_symlink_sys, target_is_directory=True)
         return True, None
 

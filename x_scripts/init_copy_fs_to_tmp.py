@@ -12,6 +12,20 @@ def get_tmp_root():
     return "/root/autodl-tmp"
 
 
+def copytree_with_progress(src, dst):
+    total_files = sum(len(files) for _, _, files in os.walk(src))
+    files_copied = 0
+
+    def copy_progress(src, dst):
+        nonlocal files_copied
+        file_size = os.path.getsize(src)
+        print(f"Copying file ({files_copied}/{total_files})/len:{file_size:,}: {src} -> {dst} ")
+        shutil.copy2(src, dst)
+        files_copied += 1
+
+    shutil.copytree(src, dst, copy_function=copy_progress)
+
+
 class DataDirSetup:
     @classmethod
     def _copy_data(cls, fldname):
@@ -21,9 +35,11 @@ class DataDirSetup:
             raise ValueError(f"{dir_src} not exist")
 
         if not os.path.isdir(dir_dst):
-            print(f"copy {dir_src} to {dir_dst}, it may take a while...")
-            shutil.copytree(dir_src, dir_dst)
-            print("copy done.")
+            print()
+            print(f"Copying {dir_src} to {dir_dst}, it may take a while...")
+            copytree_with_progress(dir_src, dir_dst)
+            print("Copy done.")
+            print()
         else:
             print(f"{dir_dst} exist, skip")
             
