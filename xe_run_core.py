@@ -26,6 +26,10 @@ def build_args():
         sys.argv.append("--no-gradio-queue")
 
     args, _ = cmd_args.parser.parse_known_args()
+
+    if not HackingParams.need_update_extensions():
+        pass
+
     print(args)
     return args
 

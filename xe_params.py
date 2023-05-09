@@ -11,3 +11,10 @@ class HackingParams:
         if launch_mdoe == "refresh":
             return True 
         return False
+    
+    @staticmethod
+    def need_update_extensions():
+        launch_mdoe = os.environ.get("LANUCH_MODE", "normal")
+        if launch_mdoe == "refresh":
+            return True 
+        return False        
