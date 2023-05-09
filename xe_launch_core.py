@@ -9,21 +9,25 @@ import json
 
 from modules import cmd_args
 from modules.paths_internal import script_path, extensions_dir
+from xe_params import HackingParams
 
-HACKING_ARGS = True
-HACKING_SKIP_REPO_UPDATE = True
+args = None 
 
-commandline_args = os.environ.get('COMMANDLINE_ARGS', "")
-sys.argv += shlex.split(commandline_args)
+def build_args():
+    global args
+    commandline_args = os.environ.get('COMMANDLINE_ARGS', "")
+    sys.argv += shlex.split(commandline_args)
 
-if HACKING_ARGS:
-    sys.argv.append("--share")
-    #sys.argv.append("--debug")
-    sys.argv.append("--port")
-    sys.argv.append("6006")
-    sys.argv.append("--no-gradio-queue")
+    if HackingParams.ADD_ARGS:
+        sys.argv.append("--share")
+        #sys.argv.append("--debug")
+        sys.argv.append("--port")
+        sys.argv.append("6006")
+        sys.argv.append("--no-gradio-queue")
 
-args, _ = cmd_args.parser.parse_known_args()
+    args, _ = cmd_args.parser.parse_known_args()
+    print(args)
+    return args
 
 python = sys.executable
 git = os.environ.get('GIT', "git")
@@ -296,7 +300,7 @@ def prepare_environment():
 
     os.makedirs(os.path.join(script_path, dir_repos), exist_ok=True)
 
-    if not HACKING_SKIP_REPO_UPDATE:
+    if HackingParams.UPDATE_GIT_REPO:
         git_clone(stable_diffusion_repo, repo_dir('stable-diffusion-stability-ai'), "Stable Diffusion", stable_diffusion_commit_hash)
         git_clone(taming_transformers_repo, repo_dir('taming-transformers'), "Taming Transformers", taming_transformers_commit_hash)
         git_clone(k_diffusion_repo, repo_dir('k-diffusion'), "K-diffusion", k_diffusion_commit_hash)
@@ -363,6 +367,8 @@ def start():
         webui.webui()
 
 
-if __name__ == "__main__":
-    prepare_environment()
-    start()
+# if __name__ == "__main__":
+#     os.environ["LANUCH_MODE"] = "normal"
+#     build_args()
+#     prepare_environment()
+#     start()
