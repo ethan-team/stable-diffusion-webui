@@ -10,12 +10,13 @@ import json
 from modules import cmd_args
 from modules.paths_internal import script_path, extensions_dir
 
-HACKING_PATCH = True
+HACKING_ARGS = True
+HACKING_SKIP_REPO_UPDATE = True
 
 commandline_args = os.environ.get('COMMANDLINE_ARGS', "")
 sys.argv += shlex.split(commandline_args)
 
-if HACKING_PATCH:
+if HACKING_ARGS:
     sys.argv.append("--share")
     #sys.argv.append("--debug")
     sys.argv.append("--port")
@@ -295,7 +296,7 @@ def prepare_environment():
 
     os.makedirs(os.path.join(script_path, dir_repos), exist_ok=True)
 
-    if not HACKING_PATCH:
+    if not HACKING_SKIP_REPO_UPDATE:
         git_clone(stable_diffusion_repo, repo_dir('stable-diffusion-stability-ai'), "Stable Diffusion", stable_diffusion_commit_hash)
         git_clone(taming_transformers_repo, repo_dir('taming-transformers'), "Taming Transformers", taming_transformers_commit_hash)
         git_clone(k_diffusion_repo, repo_dir('k-diffusion'), "K-diffusion", k_diffusion_commit_hash)
