@@ -19,7 +19,9 @@ def setup_proxy_env():
     
     os.environ["http_proxy"] = proxy_addr
     os.environ["https_proxy"] = proxy_addr
-    print(f"region:{val} proxy set to {proxy_addr}") 
+    print()
+    print(f"autodl region:{val} proxy set to {proxy_addr}") 
+    print()
     return True       
 
 
