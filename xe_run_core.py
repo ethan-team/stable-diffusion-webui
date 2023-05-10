@@ -31,6 +31,8 @@ def build_args():
 
     if HackingParams.need_extra_common_args():
         sys.argv.append("--share")
+        #sys.argv.append("--ngrok")
+        #sys.argv.append("usr_2Paq6ztAK6hrq24bfpOUB9iZYqG")
         sys.argv.append("--port")
         sys.argv.append("6006")
         sys.argv.append("--no-gradio-queue")
