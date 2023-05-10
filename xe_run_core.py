@@ -29,7 +29,7 @@ def build_args():
     commandline_args = os.environ.get('COMMANDLINE_ARGS', "")
     sys.argv += shlex.split(commandline_args)
 
-    if HackingParams.need_extra_args():
+    if HackingParams.need_extra_common_args():
         sys.argv.append("--share")
         sys.argv.append("--port")
         sys.argv.append("6006")
@@ -38,11 +38,11 @@ def build_args():
     if HackingParams.need_debug():
         sys.argv.append("--gradio-debug")
 
+    if HackingParams.need_add_extensions():
+        sys.argv.append("--enable-insecure-extension-access")
+
     args, _ = cmd_args.parser.parse_known_args()
 
-    if not HackingParams.need_update_extensions():
-        pass
-    
     if HackingParams.need_debug():
         _print_args(args)
 
