@@ -13,7 +13,7 @@ if __name__ == "__main__":
     #os.environ["LANUCH_MODE"] = "refresh:debug:update_repo"
     os.environ["LANUCH_MODE"] = "refresh:debug"
 
-    #_setup_proxy()
+    _setup_proxy()
 
     build_args()
     prepare_environment()
