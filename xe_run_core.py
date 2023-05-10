@@ -13,6 +13,17 @@ from xe_params import HackingParams
 
 args = None 
 
+def _print_args(args):
+    print("Dump args:")
+    arg_names = []
+    for arg_name in vars(args):
+        arg_names.append(arg_name)
+    arg_names = sorted(arg_names)
+    for arg_name in arg_names:
+        arg_value = getattr(args, arg_name)
+        print(f'  {arg_name}: {arg_value}')
+    print()
+
 def build_args():
     global args
     commandline_args = os.environ.get('COMMANDLINE_ARGS', "")
@@ -20,17 +31,21 @@ def build_args():
 
     if HackingParams.need_extra_args():
         sys.argv.append("--share")
-        #sys.argv.append("--debug")
         sys.argv.append("--port")
         sys.argv.append("6006")
         sys.argv.append("--no-gradio-queue")
+
+    if HackingParams.need_debug():
+        sys.argv.append("--gradio-debug")
 
     args, _ = cmd_args.parser.parse_known_args()
 
     if not HackingParams.need_update_extensions():
         pass
+    
+    if HackingParams.need_debug():
+        _print_args(args)
 
-    print(args)
     return args
 
 
