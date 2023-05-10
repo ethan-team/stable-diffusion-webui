@@ -10,9 +10,9 @@ class HackingParams:
         return True
     
     @staticmethod
-    def need_update_git_repo():
+    def need_update_repositories():
         launch_mdoe = _get_launch_mode()
-        if launch_mdoe.find("refresh") != -1:
+        if launch_mdoe.find("update_repo") != -1:
             return True 
         return False
 
