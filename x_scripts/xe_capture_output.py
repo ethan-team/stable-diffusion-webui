@@ -12,28 +12,31 @@ gf_capture_sys_print = False
 gf_capture_sys_logging = False
 gf_round_num = None 
 
-os.makedirs(os.path.dirname(LOG_DEFAULT), exist_ok=True)
+try:
+    os.makedirs(os.path.dirname(LOG_DEFAULT), exist_ok=True)
+except:  # noqa
+    pass
 
 def _get_launch_mode():
     launch_mdoe = os.environ.get("LANUCH_MODE", "normal")
     return launch_mdoe
 
-
 def _get_round_tag():
     global gf_round_num
-    os.makedirs(os.path.dirname(ROUND_FILENAME), exist_ok=True)
     if gf_round_num is None:
-        if not os.path.isfile(ROUND_FILENAME):
-            round = 1
-        else:
-            with open(ROUND_FILENAME, 'r') as f:
-                lines = f.readlines()
-                line = lines[-1]
-                round = int(line)
+        round = 1
+        try:
+            if os.path.isfile(ROUND_FILENAME):
+                with open(ROUND_FILENAME, 'r') as f:
+                    lines = f.readlines()
+                    line = lines[-1]
+                    round = int(line)
 
-            round += 1
-        with open(ROUND_FILENAME, 'w+') as f:
-            f.write(f"{round}\n")
+                round += 1
+            with open(ROUND_FILENAME, 'w+') as f:
+                f.write(f"{round}\n")
+        except: # noqa
+            pass
         gf_round_num = round
     round_tag = f"\'round {gf_round_num}\' @ {datetime.now()}"
     return gf_round_num, round_tag
@@ -41,14 +44,15 @@ def _get_round_tag():
 
 class _StdoutCapture:
     def __init__(self):
-        os.makedirs(os.path.dirname(LOG_SYS_PRINT), exist_ok=True)
+        pass
 
     def attach(self):
         self.org_stdout = sys.stdout
         sys.stdout = self
 
     def dettach(self):
-        sys.stdout = self.org_stdout
+        if hasattr(self, 'org_stdout'):
+            sys.stdout = self.org_stdout
 
     def write(self, text):
         # Process the captured output as needed
@@ -61,14 +65,17 @@ class _StdoutCapture:
             pass
 
     def flush(self):
-        self.org_stdout.flush()
+        if hasattr(self, 'org_stdout'):
+            self.org_stdout.flush()
 
     def isatty(self):
         return True
     
     def __getattr__(self, name):
         # Forward any other attribute access to the original sys.stdout
-        return getattr(self.org_stdout, name)
+        if hasattr(self, 'org_stdout'):
+            return getattr(self.org_stdout, name)
+        return None
 
 
 # Start capturing the output
