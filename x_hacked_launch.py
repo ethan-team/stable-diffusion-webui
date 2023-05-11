@@ -10,6 +10,7 @@ import json
 from modules import cmd_args
 from modules.paths_internal import script_path, extensions_dir
 from x_scripts.xe_params import HackingParams
+from x_scripts.xe_capture import hook_capture_handler
 
 args = None 
 
@@ -381,8 +382,11 @@ def tests(test_dir):
 
 
 def start():
+    if HackingParams.need_debug():
+        hook_capture_handler()
+
     print(f"Launching {'API server' if '--nowebui' in sys.argv else 'Web UI'} with arguments: {' '.join(sys.argv[1:])}")
-    import webui
+    import x_hacked_webui as webui
     if '--nowebui' in sys.argv:
         webui.api_only()
     else:
