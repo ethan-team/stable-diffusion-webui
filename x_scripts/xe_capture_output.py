@@ -6,7 +6,7 @@ from datetime import datetime
 
 LOG_SYS_PRINT = "log/sys_print.txt"
 LOG_DEFAULT = "log/sys_logging.log"
-ROUND_FILE = "log/round.log"
+ROUND_FILENAME = "log/round.log"
 
 g_capture_sys_print = False 
 g_capture_sys_logging = False 
@@ -14,6 +14,24 @@ g_capture_sys_logging = False
 def _get_launch_mode():
     launch_mdoe = os.environ.get("LANUCH_MODE", "normal")
     return launch_mdoe
+
+
+def _get_round_tag():
+    os.makedirs(os.path.dirname(ROUND_FILENAME), exist_ok=True)
+    if not os.path.isfile(ROUND_FILENAME):
+        round = 1
+    else:
+        with open(ROUND_FILENAME, 'r') as f:
+            lines = f.readlines()
+            line = lines[-1]
+            round = int(line)
+
+        round += 1
+    with open(ROUND_FILENAME, 'w+') as f:
+        f.write(f"{round}\n")
+    round_tag = f"\'round {round}\' @ {datetime.now()}"
+    return round, round_tag
+
 
 class OutputCapture:
     def __init__(self):
@@ -91,9 +109,12 @@ def hook_logging_capture_handler():
                 logger.addHandler(g_capture_log_handler)
 
     if not g_capture_sys_logging:
-        root_logger.info("\n")
-        root_logger.info(f"{datetime.now()}")
-        root_logger.info("\n")
+        _, round_tag = _get_round_tag()
+        root_logger.info("  ")
+        root_logger.info("  ")
+        root_logger.info(f"{round_tag}")
+        root_logger.info("  ")
+        root_logger.info("  ")
         g_capture_sys_logging = True
 
 def unhook_logging_capture_handler():
@@ -103,7 +124,8 @@ def hook_sys_output():
     global g_capture_sys_print
     g_capture.attach()
     if not g_capture_sys_print:
-        print(f"\n\n{datetime.now()}\n\n")
+        _, round_tag = _get_round_tag()
+        print(f"\n\n{round_tag}\n\n")
         g_capture_sys_print = True     
 
 def unhook_sys_output():
