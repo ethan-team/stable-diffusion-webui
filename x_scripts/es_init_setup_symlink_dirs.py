@@ -5,7 +5,7 @@ import shutil
 DIR_ROOT= os.path.dirname(os.path.dirname(__file__))
 
 def is_symlink_directory(directory_path):
-    return os.path.islink(directory_path) and os.path.isdir(directory_path)
+    return os.path.isdir(directory_path) and os.path.islink(directory_path) 
 
 
 def get_tmp_root():
@@ -29,13 +29,15 @@ class SymlinkDirsSetup:
             user_input = input(f"{dir_symlink_sys} is an existing dir, are you sure to make symbolic link to {dir_fldname_linked_dst} to save space? (y/n)")
             user_input = user_input.lower()
             if not user_input.startswith('y'):
-                raise ValueError("setup failed")
+                raise ValueError(f"setup failed, as you said {user_input}")
 
         if os.path.isdir(dir_symlink_sys):
             if not is_symlink_directory(dir_symlink_sys):
                 shutil.rmtree(dir_symlink_sys)
-        print(f"Create symlink from {dir_symlink_sys} to {dir_fldname_linked_dst}")
-        os.symlink(dir_fldname_linked_dst, dir_symlink_sys, target_is_directory=True)
+        
+        if not is_symlink_directory(dir_symlink_sys):
+            print(f"Create symlink from {dir_symlink_sys} to {dir_fldname_linked_dst}")
+            os.symlink(dir_fldname_linked_dst, dir_symlink_sys, target_is_directory=True)
         return True, None
 
     @classmethod
