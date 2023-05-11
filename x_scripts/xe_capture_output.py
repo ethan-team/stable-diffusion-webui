@@ -1,10 +1,15 @@
 import sys
 import os
-import logging  
+import logging
+from datetime import datetime  
 
 
 LOG_SYS_PRINT = "log/sys_print.txt"
 LOG_DEFAULT = "log/sys_logging.log"
+ROUND_FILE = "log/round.log"
+
+g_capture_sys_print = False 
+g_capture_sys_logging = False 
 
 def _get_launch_mode():
     launch_mdoe = os.environ.get("LANUCH_MODE", "normal")
@@ -63,6 +68,7 @@ g_capture_log_handler = _init_logging_capture_handler()
 
 
 def hook_logging_capture_handler():
+    global g_capture_sys_logging
     root_logger = logging.getLogger()
 
     launch_mode = _get_launch_mode()
@@ -84,17 +90,27 @@ def hook_logging_capture_handler():
             if g_capture_log_handler not in logger.handlers:
                 logger.addHandler(g_capture_log_handler)
 
+    if not g_capture_sys_logging:
+        root_logger.info("\n")
+        root_logger.info(f"{datetime.now()}")
+        root_logger.info("\n")
+        g_capture_sys_logging = True
+
 def unhook_logging_capture_handler():
     pass
 
 def hook_sys_output():
-    g_capture.attach()     
+    global g_capture_sys_print
+    g_capture.attach()
+    if not g_capture_sys_print:
+        print(f"\n\n{datetime.now()}\n\n")
+        g_capture_sys_print = True     
 
 def unhook_sys_output():
     g_capture.dettach()    
 
 def capture_all():
-    hook_sys_output
+    hook_sys_output()
     hook_logging_capture_handler()
 
 def recover_all():
