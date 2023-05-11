@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import os
-from xe_run_core import build_args, prepare_environment, start
 from x_scripts.xe_environment import capture_sys_print
+from xe_run_core import build_args, prepare_environment, start
 
 def _setup_proxy():
     from x_scripts.xe_autodl_proxy import setup_proxy_env
