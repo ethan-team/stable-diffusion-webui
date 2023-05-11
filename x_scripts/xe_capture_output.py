@@ -9,7 +9,8 @@ LOG_DEFAULT = "log/sys_logging.log"
 ROUND_FILENAME = "log/round.log"
 
 g_capture_sys_print = False 
-g_capture_sys_logging = False 
+g_capture_sys_logging = False
+g_round_num = None 
 
 def _get_launch_mode():
     launch_mdoe = os.environ.get("LANUCH_MODE", "normal")
@@ -17,20 +18,23 @@ def _get_launch_mode():
 
 
 def _get_round_tag():
+    global g_round_num
     os.makedirs(os.path.dirname(ROUND_FILENAME), exist_ok=True)
-    if not os.path.isfile(ROUND_FILENAME):
-        round = 1
-    else:
-        with open(ROUND_FILENAME, 'r') as f:
-            lines = f.readlines()
-            line = lines[-1]
-            round = int(line)
+    if g_round_num is None:
+        if not os.path.isfile(ROUND_FILENAME):
+            round = 1
+        else:
+            with open(ROUND_FILENAME, 'r') as f:
+                lines = f.readlines()
+                line = lines[-1]
+                round = int(line)
 
-        round += 1
-    with open(ROUND_FILENAME, 'w+') as f:
-        f.write(f"{round}\n")
-    round_tag = f"\'round {round}\' @ {datetime.now()}"
-    return round, round_tag
+            round += 1
+        with open(ROUND_FILENAME, 'w+') as f:
+            f.write(f"{round}\n")
+        g_round_num = round
+    round_tag = f"\'round {g_round_num}\' @ {datetime.now()}"
+    return g_round_num, round_tag
 
 
 class OutputCapture:
