@@ -3,10 +3,11 @@ import os
 import logging
 from datetime import datetime  
 
+DIR_ROOT = os.path.dirname(os.path.dirname(__file__))
 
-LOG_SYS_PRINT = "log/sys_print.txt"
-LOG_DEFAULT = "log/sys_logging.log"
-ROUND_FILENAME = "log/round.log"
+LOG_SYS_PRINT = f"{DIR_ROOT}/log/sys_print.txt"
+LOG_DEFAULT = f"{DIR_ROOT}/log/sys_logging.log"
+ROUND_FILENAME = f"{DIR_ROOT}/log/round.log"
 
 gf_capture_sys_print = False 
 gf_capture_sys_logging = False
