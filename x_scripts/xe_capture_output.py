@@ -120,9 +120,8 @@ g_capture_plain_logger_handler = _PlainLoggerHandler(LOG_DEFAULT)
 
 def _hook_logging_capture_handler():
     global gf_capture_sys_logging
-    root_logger = logging.getLogger()
-
-    if g_capture_plain_logger_handler is not None: 
+    if not gf_capture_sys_logging: 
+        root_logger = logging.getLogger()
 
         launch_mode = _get_launch_mode()
         if launch_mode.find("debug") != -1:
@@ -143,17 +142,18 @@ def _hook_logging_capture_handler():
                 if g_capture_plain_logger_handler not in logger.handlers:
                     logger.addHandler(g_capture_plain_logger_handler)
 
-        if not gf_capture_sys_logging:
-            _, round_tag = _get_round_tag()
-            root_logger.info("  ")
-            root_logger.info("  ")
-            root_logger.info(f"{round_tag}")
-            root_logger.info("  ")
-            root_logger.info("  ")
-            gf_capture_sys_logging = True
+        _, round_tag = _get_round_tag()
+        root_logger.info("  ")
+        root_logger.info("  ")
+        root_logger.info(f"{round_tag}")
+        root_logger.info("  ")
+        root_logger.info("  ")
+        gf_capture_sys_logging = True
 
 def _unhook_logging_capture_handler():
-    pass
+    global gf_capture_sys_logging
+    if gf_capture_sys_logging: 
+        gf_capture_sys_logging = False
   
 
 def capture_all():
