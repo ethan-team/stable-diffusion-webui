@@ -2,8 +2,13 @@ import sys
 import os
 import logging  
 
+
 LOG_SYS_PRINT = "log/sys_print.txt"
 LOG_DEFAULT = "log/sys_logging.log"
+
+def _get_launch_mode():
+    launch_mdoe = os.environ.get("LANUCH_MODE", "normal")
+    return launch_mdoe
 
 class OutputCapture:
     def __init__(self):
@@ -38,23 +43,33 @@ class OutputCapture:
 g_capture = OutputCapture()
 
 
-def _init_capture_handler():
+def _init_logging_capture_handler():
     os.makedirs(os.path.dirname(LOG_DEFAULT), exist_ok=True)
     file_handler = logging.FileHandler(LOG_DEFAULT)
 
     # Configure the formatter for the file handler (optional)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s @ %(pathname)s')
     file_handler.setFormatter(formatter)
-    file_handler.setLevel(logging.DEBUG)
+
+    launch_mode = _get_launch_mode()
+    if launch_mode.find("debug") != -1:
+        file_handler.setLevel(logging.DEBUG)
+    else:
+        file_handler.setLevel(logging.INFO)        
     return file_handler
 
 
-g_capture_log_handler = _init_capture_handler()
+g_capture_log_handler = _init_logging_capture_handler()
 
 
-def hook_capture_handler():
+def hook_logging_capture_handler():
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
+
+    launch_mode = _get_launch_mode()
+    if launch_mode.find("debug") != -1:
+        root_logger.setLevel(logging.DEBUG)
+    else:
+        root_logger.setLevel(logging.INFO)
 
     if g_capture_log_handler not in root_logger.handlers:
         # Attach the file handler to the root logger
@@ -69,14 +84,22 @@ def hook_capture_handler():
             if g_capture_log_handler not in logger.handlers:
                 logger.addHandler(g_capture_log_handler)
 
-def capture_all():
-    # Stop capturing the output
-    g_capture.attach() 
-    hook_capture_handler()
+def unhook_logging_capture_handler():
+    pass
 
+def hook_sys_output():
+    g_capture.attach()     
+
+def unhook_sys_output():
+    g_capture.dettach()    
+
+def capture_all():
+    hook_sys_output
+    hook_logging_capture_handler()
 
 def recover_all():
-    g_capture.dettach()
+    unhook_sys_output()
+    unhook_logging_capture_handler()
 
 
 if __name__ == "__main__":

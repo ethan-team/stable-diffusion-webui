@@ -2,7 +2,7 @@ import os
 
 AUTODL_REGION = "AutoDLRegion"
 
-def setup_proxy_env():
+def setup_autodl_proxy_env():
     val = os.environ.get(AUTODL_REGION, None)
     if val is None:
         return False
@@ -26,4 +26,4 @@ def setup_proxy_env():
 
 
 if __name__ == "__main__":
-    setup_proxy_env()
+    setup_autodl_proxy_env()
