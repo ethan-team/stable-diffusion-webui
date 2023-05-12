@@ -29,5 +29,3 @@ if confirm_operation; then
 else
     echo "Operation canceled."
 fi
-
-gu
