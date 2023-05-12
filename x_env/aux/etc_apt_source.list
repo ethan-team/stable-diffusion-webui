@@ -12,18 +12,11 @@ deb-src http://mirrors.aliyun.com/ubuntu/ focal-backports main restricted univer
 
 deb http://archive.ubuntu.com/ubuntu focal main restricted universe multiverse
 deb-src http://archive.ubuntu.com/ubuntu focal main restricted universe multiverse
-deb http://us.archive.ubuntu.com/ubuntu/ focal main restricted universe
-deb-src http://us.archive.ubuntu.com/ubuntu/ focal main restricted universe
-deb http://us.archive.ubuntu.com/ubuntu/ focal-updates main restricted universe
-deb-src http://us.archive.ubuntu.com/ubuntu/ focal-updates main restricted universe
-deb http://us.archive.ubuntu.com/ubuntu/ focal main restricted multiverse
-deb-src http://us.archive.ubuntu.com/ubuntu/ focal main restricted multiverse
-deb http://us.archive.ubuntu.com/ubuntu/ focal-updates main restricted multiverse
-deb-src http://us.archive.ubuntu.com/ubuntu/ focal-updates main restricted multiverse
 deb http://security.ubuntu.com/ubuntu focal-security main restricted universe
 deb-src http://security.ubuntu.com/ubuntu focal-security main restricted universe
-deb http://security.ubuntu.com/ubuntu focal-security main restricted multiverse
-deb-src http://security.ubuntu.com/ubuntu focal-security main restricted multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ focal-updates main restricted universe
+deb-src http://us.archive.ubuntu.com/ubuntu/ focal-updates main restricted universe
+
 
 
 https://momane.com/change-ubuntu-20-04-source-to-china-mirror

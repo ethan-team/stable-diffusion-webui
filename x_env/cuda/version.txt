@@ -20,5 +20,5 @@ GCC version:  gcc version 9.4.0 (Ubuntu 9.4.0-1ubuntu1~20.04.1)
 
 #wget https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run
 #sudo sh cuda_12.0.0_525.60.13_linux.run
-wget https://developer.download.nvidia.com/compute/cuda/12.0.1/local_installers/cuda_12.0.1_525.85.12_linux.run
-sudo sh cuda_12.0.1_525.85.12_linux.run
+#wget https://developer.download.nvidia.com/compute/cuda/12.0.1/local_installers/cuda_12.0.1_525.85.12_linux.run
+#sudo sh cuda_12.0.1_525.85.12_linux.run
