@@ -30,3 +30,4 @@ else
     echo "Operation canceled."
 fi
 
+gu
