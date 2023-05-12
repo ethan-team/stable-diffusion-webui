@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from x_scripts.xe_capture_output import capture_all
+from x_scripts.xe_capture_output import resume_capture_all
 from x_hacked_launch import build_args, prepare_environment, start
 
 def _setup_proxy():
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     #os.environ["LANUCH_MODE"] = "refresh:debug:update_repo"
     os.environ["LANUCH_MODE"] = "refresh:debug"
     
-    capture_all()
+    resume_capture_all()
     _setup_proxy()
 
     build_args()

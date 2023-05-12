@@ -12,7 +12,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from packaging import version
 
 from x_scripts.xe_params import HackingParams
-from x_scripts.xe_capture_output import capture_all
+from x_scripts.xe_capture_output import resume_capture_all
 
 import logging
 logging.getLogger("xformers").addFilter(lambda record: 'A matching Triton is not available' not in record.getMessage())
@@ -73,8 +73,6 @@ if cmd_opts.server_name:
 else:
     server_name = "0.0.0.0" if cmd_opts.listen else None
 
-if HackingParams.need_debug():
-    capture_all()
 
 def fix_asyncio_event_loop_policy():
     """
@@ -297,7 +295,7 @@ def webui():
     initialize()
 
     if HackingParams.need_debug():
-        capture_all()
+        resume_capture_all()
 
     while 1:
         if shared.opts.clean_temp_dir_at_start:
@@ -322,7 +320,7 @@ def webui():
                     gradio_auth_creds += [x.strip() for x in line.split(',') if x.strip()]
 
         if HackingParams.need_debug():
-            capture_all()
+            resume_capture_all()
 
         app, local_url, share_url = shared.demo.launch(
             share=cmd_opts.share,
@@ -417,7 +415,7 @@ def webui():
         startup_timer.record("initialize extra networks")
 
         if HackingParams.need_debug():
-            capture_all()
+            resume_capture_all()
 
 
 if __name__ == "__main__":

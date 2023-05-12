@@ -58,7 +58,7 @@ def wrap_gradio_call(func, extra_outputs=None, add_stats=False):
         # hack: hooked capture
         if xe_capture_output is not None:
             if hasattr(xe_capture_output, "capture_all"):
-                xe_capture_output.capture_all()
+                xe_capture_output.resume_capture_all()
 
         run_memmon = shared.opts.memmon_poll_rate > 0 and not shared.mem_mon.disabled and add_stats
         if run_memmon:
