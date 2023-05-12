@@ -2,6 +2,8 @@
 
 # Function to confirm the operation
 confirm_operation() {
+    echo "### WARNING ####"
+    echo "rsync autodl-tmp to autodl-fs that may impact all automatic1111 models/repositires, make sure you know the impact"
     read -rp "Are you sure you want to proceed? make sure you know what you are doing (y/n): " response
     case "$response" in
         [yY])
