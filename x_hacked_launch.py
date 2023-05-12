@@ -25,18 +25,56 @@ def _print_args(args):
         print(f'  {arg_name}: {arg_value}')
     print()
 
-def build_args():
+def _check_if_port_is_used(port):
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(('localhost', port))
+            return False
+        except OSError:
+            return True
+
+def _force_terminate_existing_process():
+    import psutil
+    import time
+    for proc in psutil.process_iter():
+        try:
+            cmdline = proc.cmdline()
+            if len(cmdline) < 2:
+                continue
+
+            if len(cmdline) >= 2:
+                for cmd in cmdline:
+                    if cmd.find("zz_") != -1 and cmd.find("launch.py") != -1: 
+                        print(f"kill existing proc {cmdline}...")
+                        proc.kill()
+                        time.sleep(2)
+                        break
+
+        except: # noqa:
+            pass     
+
+def build_args(force_terminate_existing=False):
     global args
     commandline_args = os.environ.get('COMMANDLINE_ARGS', "")
     sys.argv += shlex.split(commandline_args)
 
     if HackingParams.need_extra_common_args():
+        port = 6006
         sys.argv.append("--share")
         #sys.argv.append("--ngrok")
         #sys.argv.append("usr_2Paq6ztAK6hrq24bfpOUB9iZYqG")
         sys.argv.append("--port")
-        sys.argv.append("6006")
+        sys.argv.append(f"{port}")
         sys.argv.append("--no-gradio-queue")
+
+        if _check_if_port_is_used(port):
+            if force_terminate_existing:
+                _force_terminate_existing_process()
+            else:
+                msg = f"Port {port} is in use,  Please terminate the existing zz_xxxx-launch.py"
+                print("\nERROR: " + msg + "\n")
+                raise ValueError(msg)
 
     if HackingParams.need_debug():
         sys.argv.append("--gradio-debug")
