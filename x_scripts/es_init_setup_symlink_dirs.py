@@ -14,7 +14,7 @@ def get_tmp_root():
 
 class SymlinkDirsSetup:
     @classmethod
-    def _make_symlink(cls, fldname, create_if_none=False):
+    def _make_symlink(cls, fldname, backup=False):
         dir_symlink_sys = f"{DIR_ROOT}/{fldname}"
         if is_symlink_directory(dir_symlink_sys):
             print(f"{dir_symlink_sys} is symbolic directory already")
@@ -26,13 +26,11 @@ class SymlinkDirsSetup:
             print(f"{dir_fldname_linked_dst} is empty dir, and ready to use")
         
         if os.path.isdir(dir_symlink_sys):
-            user_input = input(f"{dir_symlink_sys} is an existing dir, are you sure to make symbolic link to {dir_fldname_linked_dst} to save space? (y/n)")
-            user_input = user_input.lower()
-            if not user_input.startswith('y'):
-                raise ValueError(f"setup failed, as you said {user_input}")
-
-        if os.path.isdir(dir_symlink_sys):
             if not is_symlink_directory(dir_symlink_sys):
+                if backup:
+                    dir_symlink_sys_bak = dir_symlink_sys + "_bak"
+                    print(f"Backup {dir_symlink_sys} to {dir_symlink_sys_bak} ")
+                    shutil.move(dir_symlink_sys, dir_symlink_sys_bak)
                 shutil.rmtree(dir_symlink_sys)
         
         if not is_symlink_directory(dir_symlink_sys):
@@ -43,7 +41,7 @@ class SymlinkDirsSetup:
     @classmethod
     def ensure_working_dir(cls):
         cls._make_symlink("models")
-        cls._make_symlink("outputs", create_if_none=True)
+        cls._make_symlink("outputs", backup=True)
         cls._make_symlink("repositories")
 
 

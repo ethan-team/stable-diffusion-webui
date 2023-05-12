@@ -13,6 +13,7 @@ if __name__ == "__main__":
 
     os.environ["LANUCH_MODE"] = "refresh"
     setup_autodl_proxy_env()
+  
     build_args()
     prepare_environment()
     start()

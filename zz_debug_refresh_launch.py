@@ -11,7 +11,6 @@ def _setup_proxy():
 
 
 if __name__ == "__main__":
-    #os.environ["LANUCH_MODE"] = "refresh:debug:update_repo"
     os.environ["LANUCH_MODE"] = "refresh:debug"
     
     resume_capture_all()
