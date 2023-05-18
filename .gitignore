@@ -34,3 +34,6 @@ notification.mp3
 /test/stderr.txt
 /cache.json*
 /config_states/
+
+/.ipynb_checkpoints
+/models
