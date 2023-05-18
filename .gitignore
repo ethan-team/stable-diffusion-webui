@@ -38,3 +38,10 @@ notification.mp3
 /models
 /autodl-fs
 /autodl-tmp
+
+/models
+/models_bak
+/outputs
+/outputs_bak
+/interrogate_tmp
+/interrogate
