@@ -34,3 +34,7 @@ notification.mp3
 /test/stderr.txt
 /cache.json*
 /config_states/
+
+/models
+/autodl-fs
+/autodl-tmp
