@@ -1,0 +1,37 @@
+Step 1: change pip repo location:
+    vi /etc/pip.conf 
+    change to x_env/aux/etc_pip.conf
+
+
+step 2: change apt repo location
+    vi /etc/apt/sources.list 
+    change to xenv/aux/etc_apt_source.list
+
+    * ref:
+    ref: https://askubuntu.com/questions/1093451/how-to-switch-apt-mirror-from-the-commandline
+    ref: https://ubuntu.com/server/docs/package-management
+
+
+Step 3: pip install extra 
+    check manual_pip_install.txt
+
+
+step 4: update .bashrc - last two line in .bashrc
+    conda activate py10 # using python 3.10.x
+    source /root/stable-diffusion-webui/venv/bin/activate  # commented out by conda initialize
+
+    * notice:
+        python under venv are linked to python under py10
+
+
+step5: update .git/config add following
+[remote "hooked"]
+        url = https://github.com/ethan-team/stable-diffusion-webui.git
+        fetch = +refs/heads/*:refs/remotes/hooked/*
+
+        ensure .ssh at root has .ssh access files
+
+step6: copy data and links:
+    see x_env/copy_data_and_links_lb.md
+
+
