@@ -43,8 +43,15 @@ def _force_terminate_existing_process():
             if len(cmdline) < 2:
                 continue
 
+            proc_pid = proc.pid 
+            pid = os.getpid()
+            if proc_pid == pid:
+                continue
+
             if len(cmdline) >= 2:
                 for cmd in cmdline:
+                    if cmd.find(".vscode-server") != -1:
+                        break
                     if cmd.find("zz_") != -1 and cmd.find("launch.py") != -1: 
                         print(f"kill existing proc {cmdline}...")
                         proc.kill()
@@ -77,8 +84,8 @@ def build_args(force_terminate_existing=False):
                 print("\nERROR: " + msg + "\n")
                 raise ValueError(msg)
 
-    if HackingParams.need_debug():
-        sys.argv.append("--gradio-debug")
+    #if HackingParams.need_debug():
+    #    sys.argv.append("--gradio-debug")
 
     if HackingParams.need_add_extensions():
         sys.argv.append("--enable-insecure-extension-access")
