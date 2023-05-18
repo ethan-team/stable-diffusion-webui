@@ -42,7 +42,7 @@ class SymlinkDirsSetup:
     def ensure_working_dir(cls):
         cls._make_symlink("models")
         cls._make_symlink("outputs", backup=True)
-        cls._make_symlink("repositories")
+        #cls._make_symlink("repositories")
 
 
 if __name__ == "__main__":

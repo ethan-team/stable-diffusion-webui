@@ -49,7 +49,7 @@ class DataDirSetup:
     def ensure_data_copied(cls):
         cls._copy_data("models")
         #cls._copy_data("outputs")
-        cls._copy_data("repositories")
+        #cls._copy_data("repositories")
 
 
 if __name__ == "__main__":
