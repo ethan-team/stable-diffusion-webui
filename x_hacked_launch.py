@@ -67,6 +67,7 @@ def build_args(force_terminate_existing=False):
         sys.argv.append("--port")
         sys.argv.append(f"{port}")
         sys.argv.append("--no-gradio-queue")
+        sys.argv.append("--no-download-sd-model")
 
         if _check_if_port_is_used(port):
             if force_terminate_existing:
