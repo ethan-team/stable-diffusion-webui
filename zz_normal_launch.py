@@ -9,10 +9,10 @@ def _setup_proxy():
     setup_autodl_proxy_env()
 
 def _setup_data_and_symlinks():
-    from x_scripts.es_init_copy_fs_to_tmp import DataDirSetup
+    #from x_scripts.es_init_copy_fs_to_tmp import DataDirSetup
     from x_scripts.es_init_setup_symlink_dirs import SymlinkDirsSetup
 
-    DataDirSetup.ensure_data_copied()
+    #DataDirSetup.ensure_data_copied()
     SymlinkDirsSetup.ensure_working_dir()
 
 
