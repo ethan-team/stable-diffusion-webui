@@ -145,6 +145,17 @@ def forbid_loaded_nonbuiltin_upscalers():
             forbidden_upscaler_classes.add(cls)
 
 
+def xe_hack_load_upscaler_ldsr():
+    try:
+        import sys
+        ldsr_dir =  os.path.join(shared.script_path, "extensions-builtin" + os.sep + "LDSR")
+        if ldsr_dir not in sys.path:
+            sys.path.append(ldsr_dir)
+        full_model = "scripts.ldsr_model"
+        importlib.import_module(full_model)        
+    except Exception as ex:
+        print("Exception occured(Hacked): " + str(ex))
+
 def load_upscalers():
     # We can only do this 'magic' method to dynamically load upscalers if they are referenced,
     # so we'll try to import any _model.py files before looking in __subclasses__
@@ -157,6 +168,9 @@ def load_upscalers():
                 importlib.import_module(full_model)
             except:
                 pass
+
+    #xe_hack load upscaler 
+    xe_hack_load_upscaler_ldsr()
 
     datas = []
     commandline_options = vars(shared.cmd_opts)

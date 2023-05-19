@@ -6,14 +6,18 @@ import time
 
 from modules import shared, progress
 
-# hack: hooked capture
-try:
-    from x_scripts import xe_capture_output
-except: # noqa
-    xe_capture_output = None
-
 queue_lock = threading.Lock()
 
+# xe_hack: hooked capture
+def xe_hack_capture_output():
+    try:
+        from x_scripts import xe_capture_output
+    except: # noqa
+        xe_capture_output = None
+
+    if xe_capture_output is not None:
+        if hasattr(xe_capture_output, "capture_all"):
+            xe_capture_output.resume_capture_all()
 
 def wrap_queued_call(func):
     def f(*args, **kwargs):
@@ -55,10 +59,8 @@ def wrap_gradio_gpu_call(func, extra_outputs=None):
 def wrap_gradio_call(func, extra_outputs=None, add_stats=False):
     def f(*args, extra_outputs_array=extra_outputs, **kwargs):
 
-        # hack: hooked capture
-        if xe_capture_output is not None:
-            if hasattr(xe_capture_output, "capture_all"):
-                xe_capture_output.resume_capture_all()
+        # xe_hack: hooked capture
+        xe_hack_capture_output()
 
         run_memmon = shared.opts.memmon_poll_rate > 0 and not shared.mem_mon.disabled and add_stats
         if run_memmon:

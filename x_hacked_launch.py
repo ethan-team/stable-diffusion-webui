@@ -76,6 +76,9 @@ def build_args(force_terminate_existing=False):
         sys.argv.append("--no-gradio-queue")
         sys.argv.append("--no-download-sd-model")
 
+        sys.argv.append("--ldsr-models-path")
+        sys.argv.append("/root/stable-diffusion-webui/models/LDSR")
+
         if _check_if_port_is_used(port):
             if force_terminate_existing:
                 _force_terminate_existing_process()
