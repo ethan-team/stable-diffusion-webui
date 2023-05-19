@@ -243,6 +243,7 @@ def _hook_thread():
         gmap_thread_memo[thread_id] = THREAD_MEMO(obj_sys_stdout=obj_sys_stdout, 
                                                   obj_sys_stderr=obj_sys_stderr,
                                                   obj_log_handler=obj_log_handler)
+        print(f"_hook_thead {thread_id}")
 
     return gmap_thread_memo[thread_id]
 

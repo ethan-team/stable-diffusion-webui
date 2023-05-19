@@ -9,7 +9,7 @@ from modules import shared, progress
 queue_lock = threading.Lock()
 
 # xe_hack: hooked capture
-def xe_hack_capture_output():
+def xe_hack_capture_output_gradio_call(*args, extra_outputs_array=None, **kwargs):
     try:
         from xe_hack import xe_capture_output
     except: # noqa
@@ -18,7 +18,25 @@ def xe_hack_capture_output():
     if xe_capture_output is not None:
         if hasattr(xe_capture_output, "capture_all"):
             xe_capture_output.resume_capture_all()
+    
+    print()
+    print("##new gradio call:")
+    print("#args:   " + str(args))
+    print("#eoa:    " + str(extra_outputs_array))
+    print("#kwargs: " + str(kwargs))
 
+def xe_hack_capture_wrap_gradio_gpu_call_begin(*args, func=None, **kwargs):
+    import random
+    ggc_id = random.randint(10000, 99999)
+    print(f"**++ gradio gpu call begin: ggc_id:{ggc_id} func:" + str(func))
+    print("*args:   " + str(args))
+    print("*kwargs: " + str(kwargs))
+    return ggc_id
+
+def xe_hack_capture_wrap_gradio_gpu_call_end(ggc_id, func=None):
+    print(f"**-- gradio gpu call ended: ggc_id:{ggc_id} func:" + str(func))
+    print()
+    
 def wrap_queued_call(func):
     def f(*args, **kwargs):
         with queue_lock:
@@ -39,17 +57,20 @@ def wrap_gradio_gpu_call(func, extra_outputs=None):
         else:
             id_task = None
 
+        ggc_id = xe_hack_capture_wrap_gradio_gpu_call_begin(*args, func=func, **kwargs)
         with queue_lock:
             shared.state.begin()
             progress.start_task(id_task)
 
             try:
+
                 res = func(*args, **kwargs)
                 progress.record_results(id_task, res)
             finally:
                 progress.finish_task(id_task)
 
             shared.state.end()
+        xe_hack_capture_wrap_gradio_gpu_call_end(ggc_id, func=func)
 
         return res
 
@@ -60,7 +81,7 @@ def wrap_gradio_call(func, extra_outputs=None, add_stats=False):
     def f(*args, extra_outputs_array=extra_outputs, **kwargs):
 
         # xe_hack: hooked capture
-        xe_hack_capture_output()
+        xe_hack_capture_output_gradio_call(*args, extra_outputs_array=extra_outputs, **kwargs)
 
         run_memmon = shared.opts.memmon_poll_rate > 0 and not shared.mem_mon.disabled and add_stats
         if run_memmon:
