@@ -11,7 +11,7 @@ queue_lock = threading.Lock()
 # xe_hack: hooked capture
 def xe_hack_capture_output():
     try:
-        from x_scripts import xe_capture_output
+        from xe_hack import xe_capture_output
     except: # noqa
         xe_capture_output = None
 

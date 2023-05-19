@@ -11,8 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from packaging import version
 
-from x_scripts.xe_params import HackingParams
-from x_scripts.xe_capture_output import resume_capture_all
+from xe_hack.xe_params import HackingParams
+from xe_hack.xe_capture_output import resume_capture_all
 
 import logging
 logging.getLogger("xformers").addFilter(lambda record: 'A matching Triton is not available' not in record.getMessage())
