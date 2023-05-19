@@ -90,6 +90,11 @@ def build_args(force_terminate_existing=False):
     #if HackingParams.need_debug():
     #    sys.argv.append("--gradio-debug")
 
+    if not is_installed('torch') or not is_installed("torchvision"):
+        msg = "torch not installed, you may select wrong venv to run, try run zz_webui.sh"
+        print("\nERROR: " + msg + "\n")
+        raise ValueError(msg)
+
     if HackingParams.need_add_extensions():
         sys.argv.append("--enable-insecure-extension-access")
 

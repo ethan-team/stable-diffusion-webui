@@ -52,7 +52,7 @@ fi
 
 if [[ -z "${LAUNCH_SCRIPT}" ]]
 then
-    LAUNCH_SCRIPT="launch.py"
+    LAUNCH_SCRIPT="./zz_normal_launch.py"
 fi
 
 # this script cannot be run as root by default
@@ -195,8 +195,8 @@ then
     exec accelerate launch --num_cpu_threads_per_process=6 "${LAUNCH_SCRIPT}" "$@"
 else
     printf "\n%s\n" "${delimiter}"
-    printf "Launching launch.py..."
+    printf "Launching ${LAUNCH_SCRIPT}..."
     printf "\n%s\n" "${delimiter}"
-    prepare_tcmalloc
-    exec "${python_cmd}" "${LAUNCH_SCRIPT}" "$@"
+    #prepare_tcmalloc
+    exec "${LAUNCH_SCRIPT}"
 fi
