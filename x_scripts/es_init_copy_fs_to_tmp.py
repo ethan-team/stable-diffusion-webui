@@ -6,7 +6,7 @@ DIR_ROOT= os.path.dirname(os.path.dirname(__file__))
 
 
 def get_fs_root():
-    return "/root/autodl-fs/sdw"
+    return "/root/autodl-fs/albert-models"
 
 def get_tmp_root():
     return "/root/autodl-tmp"
