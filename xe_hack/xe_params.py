@@ -34,6 +34,17 @@ class HackingParams:
 
     @staticmethod
     def prepare_env_vars():
-        hostname = socket.gethostname()
-        hostname = hostname.replace("autodl-container-", "")
-        hostname = hostname.replace("container-", "")
+        try:
+            hostname = socket.gethostname()
+            hostname = hostname.replace("autodl-container-", "")
+            hostname = hostname.replace("container-", "")
+
+            from xe_hack.xe_git_repo import get_tag
+            tag = get_tag()
+
+            hostid = f"{tag} @{hostname}"
+            os.environ["HOSTID"] = hostid
+
+        except:
+            pass
+

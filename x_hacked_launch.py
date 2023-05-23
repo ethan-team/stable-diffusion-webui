@@ -66,6 +66,7 @@ def build_args(force_terminate_existing=False):
     commandline_args = os.environ.get('COMMANDLINE_ARGS', "")
     sys.argv += shlex.split(commandline_args)
 
+    HackingParams.prepare_env_vars()
     if HackingParams.need_extra_common_args():
         port = 6006
         sys.argv.append("--share")
