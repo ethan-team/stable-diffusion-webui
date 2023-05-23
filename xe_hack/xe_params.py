@@ -45,6 +45,6 @@ class HackingParams:
             hostid = f"{tag} @{hostname}"
             os.environ["HOSTID"] = hostid
 
-        except:
+        except:  # noqa
             pass
 
