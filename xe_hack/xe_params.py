@@ -1,4 +1,5 @@
 import os
+import socket
 
 def _get_launch_mode():
     launch_mdoe = os.environ.get("LANUCH_MODE", "normal")
@@ -30,3 +31,9 @@ class HackingParams:
         if launch_mdoe.find("refresh") != -1:
             return True 
         return False            
+
+    @staticmethod
+    def prepare_env_vars():
+        hostname = socket.gethostname()
+        hostname = hostname.replace("autodl-container-", "")
+        hostname = hostname.replace("container-", "")

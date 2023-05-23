@@ -1922,6 +1922,7 @@ if not hasattr(shared, 'GradioTemplateResponseOriginal'):
 def versions_html():
     import torch
     import launch
+    import socket
 
     python_version = ".".join([str(x) for x in sys.version_info[0:3]])
     commit = launch.commit_hash()
@@ -1932,6 +1933,7 @@ def versions_html():
         xformers_version = xformers.__version__
     else:
         xformers_version = "N/A"
+    hostid = os.environ.get("HOSTID", None)
 
     return f"""
 python: <span title="{sys.version}">{python_version}</span>
@@ -1945,4 +1947,6 @@ gradio: {gr.__version__}
 commit: <a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/{commit}">{short_commit}</a>
  • 
 checkpoint: <a id="sd_checkpoint_hash">N/A</a>
+ • 
+hostid: {hostid}
 """
