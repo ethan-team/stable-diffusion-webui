@@ -48,6 +48,8 @@ warnings.filterwarnings("default" if opts.show_warnings else "ignore", category=
 mimetypes.init()
 mimetypes.add_type('application/javascript', '.js')
 
+xe_custom_inputs = None
+
 if not cmd_opts.share and not cmd_opts.listen:
     # fix gradio phoning home
     gradio.utils.version_check = lambda: None
@@ -949,6 +951,8 @@ def create_ui():
                 ],
                 show_progress=False,
             )
+            global xe_custom_inputs
+            xe_custom_inputs = custom_inputs
 
             interrogate_args = dict(
                 _js="get_img2img_tab_index",
