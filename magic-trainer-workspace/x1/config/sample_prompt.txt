@@ -1,0 +1,2 @@
+1 zwx person in white shirt  --n lowres, blurry --w 512 --h 512 --l 7 --s 28
+ 1 zwx person in black jacket --n lowres, blurry --w 512 --h 512 --l 7 --s 28

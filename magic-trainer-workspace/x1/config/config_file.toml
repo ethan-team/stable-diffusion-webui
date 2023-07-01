@@ -1,0 +1,57 @@
+[model_arguments]
+v2 = false
+v_parameterization = false
+pretrained_model_name_or_path = "/root/stable-diffusion-webui/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors"
+vae = "/root/stable-diffusion-webui/models/VAE/vae-ft-mse-840000-ema-pruned.ckpt"
+
+[additional_network_arguments]
+no_metadata = false
+unet_lr = 1e-5
+text_encoder_lr = 5e-6
+network_module = "networks.lora"
+network_dim = 64
+network_alpha = 32
+network_train_unet_only = false
+network_train_text_encoder_only = false
+
+[optimizer_arguments]
+optimizer_type = "Lion"
+learning_rate = 1e-5
+max_grad_norm = 1.0
+lr_scheduler = "polynomial"
+lr_warmup_steps = 0
+lr_scheduler_power = 1
+
+[dataset_arguments]
+cache_latents = true
+debug_dataset = false
+
+[training_arguments]
+output_dir = "/root/stable-diffusion-webui/models/Lora"
+output_name = "x1"
+save_precision = "fp16"
+save_every_n_epochs = 1
+train_batch_size = 1
+max_token_length = 225
+mem_eff_attn = false
+xformers = false
+max_train_epochs = 1
+max_data_loader_n_workers = 8
+persistent_data_loader_workers = true
+gradient_checkpointing = false
+gradient_accumulation_steps = 1
+mixed_precision = "fp16"
+logging_dir = "/root/stable-diffusion-webui/magic-trainer-workspace/x1/log"
+log_prefix = "x1"
+lowram = false
+
+[sample_prompt_arguments]
+sample_dir = "/root/stable-diffusion-webui/magic-trainer-workspace/x1/sample"
+sample_every_n_epochs = 1
+sample_sampler = "k_dpm_2"
+
+[dreambooth_arguments]
+prior_loss_weight = 1.0
+
+[saving_arguments]
+save_model_as = "safetensors"
