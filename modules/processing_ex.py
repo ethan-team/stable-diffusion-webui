@@ -29,6 +29,8 @@ import modules.styles
 from modules import (devices, extra_networks, generation_parameters_copypaste,
                      lowvram, masking, prompt_parser, script_callbacks,
                      scripts, sd_samplers, sd_vae_approx)
+from modules.processing import (StableDiffusionProcessing,
+                                StableDiffusionProcessingImg2Img)
 from modules.sd_hijack import model_hijack
 from modules.shared import cmd_opts, opts, state
 
@@ -102,182 +104,8 @@ def txt2img_image_conditioning(sd_model, x, width, height):
         # Pretty sure we can just make this a 1x1 image since its not going to be used besides its batch size.
         return x.new_zeros(x.shape[0], 5, 1, 1, dtype=x.dtype, device=x.device)
 
-
-class StableDiffusionProcessingEx:
-    """
-    The first set of paramaters: sd_models -> do_not_reload_embeddings represent the minimum required to create a StableDiffusionProcessing
-    """
-    def __init__(self, sd_model=None, outpath_samples=None, outpath_grids=None, prompt: str = "", styles: List[str] = None, seed: int = -1, subseed: int = -1, subseed_strength: float = 0, seed_resize_from_h: int = -1, seed_resize_from_w: int = -1, seed_enable_extras: bool = True, sampler_name: str = None, batch_size: int = 1, n_iter: int = 1, steps: int = 50, cfg_scale: float = 7.0, width: int = 512, height: int = 512, restore_faces: bool = False, tiling: bool = False, do_not_save_samples: bool = False, do_not_save_grid: bool = False, extra_generation_params: Dict[Any, Any] = None, overlay_images: Any = None, negative_prompt: str = None, eta: float = None, do_not_reload_embeddings: bool = False, denoising_strength: float = 0, ddim_discretize: str = None, s_min_uncond: float = 0.0, s_churn: float = 0.0, s_tmax: float = None, s_tmin: float = 0.0, s_noise: float = 1.0, override_settings: Dict[str, Any] = None, override_settings_restore_afterwards: bool = True, sampler_index: int = None, script_args: list = None):
-        if sampler_index is not None:
-            print("sampler_index argument for StableDiffusionProcessing does not do anything; use sampler_name", file=sys.stderr)
-
-        self.outpath_samples: str = outpath_samples
-        self.outpath_grids: str = outpath_grids
-        self.prompt: str = prompt
-        self.prompt_for_display: str = None
-        self.negative_prompt: str = (negative_prompt or "")
-        self.styles: list = styles or []
-        self.seed: int = seed
-        self.subseed: int = subseed
-        self.subseed_strength: float = subseed_strength
-        self.seed_resize_from_h: int = seed_resize_from_h
-        self.seed_resize_from_w: int = seed_resize_from_w
-        self.sampler_name: str = sampler_name
-        self.batch_size: int = batch_size
-        self.n_iter: int = n_iter
-        self.steps: int = steps
-        self.cfg_scale: float = cfg_scale
-        self.width: int = width
-        self.height: int = height
-        self.restore_faces: bool = restore_faces
-        self.tiling: bool = tiling
-        self.do_not_save_samples: bool = do_not_save_samples
-        self.do_not_save_grid: bool = do_not_save_grid
-        self.extra_generation_params: dict = extra_generation_params or {}
-        self.overlay_images = overlay_images
-        self.eta = eta
-        self.do_not_reload_embeddings = do_not_reload_embeddings
-        self.paste_to = None
-        self.color_corrections = None
-        self.denoising_strength: float = denoising_strength
-        self.sampler_noise_scheduler_override = None
-        self.ddim_discretize = ddim_discretize or opts.ddim_discretize
-        self.s_min_uncond = s_min_uncond or opts.s_min_uncond
-        self.s_churn = s_churn or opts.s_churn
-        self.s_tmin = s_tmin or opts.s_tmin
-        self.s_tmax = s_tmax or float('inf')  # not representable as a standard ui option
-        self.s_noise = s_noise or opts.s_noise
-        self.override_settings = {k: v for k, v in (override_settings or {}).items() if k not in shared.restricted_opts}
-        self.override_settings_restore_afterwards = override_settings_restore_afterwards
-        self.is_using_inpainting_conditioning = False
-        self.disable_extra_networks = False
-
-        if not seed_enable_extras:
-            self.subseed = -1
-            self.subseed_strength = 0
-            self.seed_resize_from_h = 0
-            self.seed_resize_from_w = 0
-
-        self.scripts = None
-        self.script_args = script_args
-        self.all_prompts = None
-        self.all_negative_prompts = None
-        self.all_seeds = None
-        self.all_subseeds = None
-        self.iteration = 0
-        self.is_hr_pass = False
-        
-
-    @property
-    def sd_model(self):
-        return shared.sd_model
-
-    def txt2img_image_conditioning(self, x, width=None, height=None):
-        self.is_using_inpainting_conditioning = self.sd_model.model.conditioning_key in {'hybrid', 'concat'}
-
-        return txt2img_image_conditioning(self.sd_model, x, width or self.width, height or self.height)
-
-    def depth2img_image_conditioning(self, source_image):
-        # Use the AddMiDaS helper to Format our source image to suit the MiDaS model
-        transformer = AddMiDaS(model_type="dpt_hybrid")
-        transformed = transformer({"jpg": rearrange(source_image[0], "c h w -> h w c")})
-        midas_in = torch.from_numpy(transformed["midas_in"][None, ...]).to(device=shared.device)
-        midas_in = repeat(midas_in, "1 ... -> n ...", n=self.batch_size)
-
-        conditioning_image = self.sd_model.get_first_stage_encoding(self.sd_model.encode_first_stage(source_image))
-        conditioning = torch.nn.functional.interpolate(
-            self.sd_model.depth_model(midas_in),
-            size=conditioning_image.shape[2:],
-            mode="bicubic",
-            align_corners=False,
-        )
-
-        (depth_min, depth_max) = torch.aminmax(conditioning)
-        conditioning = 2. * (conditioning - depth_min) / (depth_max - depth_min) - 1.
-        return conditioning
-
-    def edit_image_conditioning(self, source_image):
-        conditioning_image = self.sd_model.encode_first_stage(source_image).mode()
-
-        return conditioning_image
-
-    def unclip_image_conditioning(self, source_image):
-        c_adm = self.sd_model.embedder(source_image)
-        if self.sd_model.noise_augmentor is not None:
-            noise_level = 0 # TODO: Allow other noise levels?
-            c_adm, noise_level_emb = self.sd_model.noise_augmentor(c_adm, noise_level=repeat(torch.tensor([noise_level]).to(c_adm.device), '1 -> b', b=c_adm.shape[0]))
-            c_adm = torch.cat((c_adm, noise_level_emb), 1)
-        return c_adm
-
-    def inpainting_image_conditioning(self, source_image, latent_image, image_mask=None):
-        self.is_using_inpainting_conditioning = True
-
-        # Handle the different mask inputs
-        if image_mask is not None:
-            if torch.is_tensor(image_mask):
-                conditioning_mask = image_mask
-            else:
-                conditioning_mask = np.array(image_mask.convert("L"))
-                conditioning_mask = conditioning_mask.astype(np.float32) / 255.0
-                conditioning_mask = torch.from_numpy(conditioning_mask[None, None])
-
-                # Inpainting model uses a discretized mask as input, so we round to either 1.0 or 0.0
-                conditioning_mask = torch.round(conditioning_mask)
-        else:
-            conditioning_mask = source_image.new_ones(1, 1, *source_image.shape[-2:])
-
-        # Create another latent image, this time with a masked version of the original input.
-        # Smoothly interpolate between the masked and unmasked latent conditioning image using a parameter.
-        conditioning_mask = conditioning_mask.to(device=source_image.device, dtype=source_image.dtype)
-        conditioning_image = torch.lerp(
-            source_image,
-            source_image * (1.0 - conditioning_mask),
-            getattr(self, "inpainting_mask_weight", shared.opts.inpainting_mask_weight)
-        )
-
-        # Encode the new masked image using first stage of network.
-        conditioning_image = self.sd_model.get_first_stage_encoding(self.sd_model.encode_first_stage(conditioning_image))
-
-        # Create the concatenated conditioning tensor to be fed to `c_concat`
-        conditioning_mask = torch.nn.functional.interpolate(conditioning_mask, size=latent_image.shape[-2:])
-        conditioning_mask = conditioning_mask.expand(conditioning_image.shape[0], -1, -1, -1)
-        image_conditioning = torch.cat([conditioning_mask, conditioning_image], dim=1)
-        image_conditioning = image_conditioning.to(shared.device).type(self.sd_model.dtype)
-
-        return image_conditioning
-
-    def img2img_image_conditioning(self, source_image, latent_image, image_masks=[]):
-        source_image = devices.cond_cast_float(source_image)
-
-        # HACK: Using introspection as the Depth2Image model doesn't appear to uniquely
-        # identify itself with a field common to all models. The conditioning_key is also hybrid.
-        if isinstance(self.sd_model, LatentDepth2ImageDiffusion):
-            return self.depth2img_image_conditioning(source_image)
-
-        if self.sd_model.cond_stage_key == "edit":
-            return self.edit_image_conditioning(source_image)
-
-        # if self.sampler.conditioning_key in {'hybrid', 'concat'}:
-        #     return self.inpainting_image_conditioning(source_image, latent_image, image_mask=image_masks)
-
-        if self.sampler.conditioning_key == "crossattn-adm":
-            return self.unclip_image_conditioning(source_image)
-
-        # Dummy zero conditioning if we're not using inpainting or depth model.
-        return latent_image.new_zeros(latent_image.shape[0], 5, 1, 1)
-
-    def init(self, all_prompts, all_seeds, all_subseeds):
-        pass
-
-    def sample(self, conditioning, unconditional_conditioning, seeds, subseeds, subseed_strength, prompts):
-        raise NotImplementedError()
-
-    def close(self):
-        self.sampler = None
-
-
 class Processed:
-    def __init__(self, p: StableDiffusionProcessingEx, images_list, seed=-1, info="", subseed=None, all_prompts=None, all_negative_prompts=None, all_seeds=None, all_subseeds=None, index_of_first_image=0, infotexts=None, comments=""):
+    def __init__(self, p: StableDiffusionProcessing, images_list, seed=-1, info="", subseed=None, all_prompts=None, all_negative_prompts=None, all_seeds=None, all_subseeds=None, index_of_first_image=0, infotexts=None, comments=""):
         self.images = images_list
         self.prompt = p.prompt
         self.negative_prompt = p.negative_prompt
@@ -358,7 +186,7 @@ class Processed:
 
         return json.dumps(obj)
 
-    def infotext(self, p: StableDiffusionProcessingEx, index):
+    def infotext(self, p: StableDiffusionProcessing, index):
         return create_infotext(p, self.all_prompts, self.all_seeds, self.all_subseeds, comments=[], position_in_batch=index % self.batch_size, iteration=index // self.batch_size)
 
 
@@ -495,7 +323,7 @@ def create_infotext(p, all_prompts, all_seeds, all_subseeds, comments=None, iter
     return f"{all_prompts[index]}{negative_prompt_text}\n{generation_params_text}".strip()
 
 
-def process_images(p: StableDiffusionProcessingEx) -> Processed:
+def process_images(p: StableDiffusionProcessing) -> Processed:
     stored_opts = {k: opts.data[k] for k in p.override_settings.keys()}
 
     try:
@@ -527,7 +355,7 @@ def process_images(p: StableDiffusionProcessingEx) -> Processed:
     return res
 
 
-def process_images_inner(p: StableDiffusionProcessingEx) -> Processed:
+def process_images_inner(p: StableDiffusionProcessing) -> Processed:
     """this is the main loop that both txt2img and img2img use; it calls func_init once inside all the scopes and func_sample once per batch"""
 
     if type(p.prompt) == list:
@@ -790,187 +618,23 @@ def old_hires_fix_first_pass_dimensions(width, height):
     return width, height
 
 
-class StableDiffusionProcessingTxt2Img(StableDiffusionProcessingEx):
-    sampler = None
-
-    def __init__(self, enable_hr: bool = False, denoising_strength: float = 0.75, firstphase_width: int = 0, firstphase_height: int = 0, hr_scale: float = 2.0, hr_upscaler: str = None, hr_second_pass_steps: int = 0, hr_resize_x: int = 0, hr_resize_y: int = 0, **kwargs):
-        super().__init__(**kwargs)
-        self.enable_hr = enable_hr
-        self.denoising_strength = denoising_strength
-        self.hr_scale = hr_scale
-        self.hr_upscaler = hr_upscaler
-        self.hr_second_pass_steps = hr_second_pass_steps
-        self.hr_resize_x = hr_resize_x
-        self.hr_resize_y = hr_resize_y
-        self.hr_upscale_to_x = hr_resize_x
-        self.hr_upscale_to_y = hr_resize_y
-
-        if firstphase_width != 0 or firstphase_height != 0:
-            self.hr_upscale_to_x = self.width
-            self.hr_upscale_to_y = self.height
-            self.width = firstphase_width
-            self.height = firstphase_height
-
-        self.truncate_x = 0
-        self.truncate_y = 0
-        self.applied_old_hires_behavior_to = None
-
-    def init(self, all_prompts, all_seeds, all_subseeds):
-        if self.enable_hr:
-            if opts.use_old_hires_fix_width_height and self.applied_old_hires_behavior_to != (self.width, self.height):
-                self.hr_resize_x = self.width
-                self.hr_resize_y = self.height
-                self.hr_upscale_to_x = self.width
-                self.hr_upscale_to_y = self.height
-
-                self.width, self.height = old_hires_fix_first_pass_dimensions(self.width, self.height)
-                self.applied_old_hires_behavior_to = (self.width, self.height)
-
-            if self.hr_resize_x == 0 and self.hr_resize_y == 0:
-                self.extra_generation_params["Hires upscale"] = self.hr_scale
-                self.hr_upscale_to_x = int(self.width * self.hr_scale)
-                self.hr_upscale_to_y = int(self.height * self.hr_scale)
-            else:
-                self.extra_generation_params["Hires resize"] = f"{self.hr_resize_x}x{self.hr_resize_y}"
-
-                if self.hr_resize_y == 0:
-                    self.hr_upscale_to_x = self.hr_resize_x
-                    self.hr_upscale_to_y = self.hr_resize_x * self.height // self.width
-                elif self.hr_resize_x == 0:
-                    self.hr_upscale_to_x = self.hr_resize_y * self.width // self.height
-                    self.hr_upscale_to_y = self.hr_resize_y
-                else:
-                    target_w = self.hr_resize_x
-                    target_h = self.hr_resize_y
-                    src_ratio = self.width / self.height
-                    dst_ratio = self.hr_resize_x / self.hr_resize_y
-
-                    if src_ratio < dst_ratio:
-                        self.hr_upscale_to_x = self.hr_resize_x
-                        self.hr_upscale_to_y = self.hr_resize_x * self.height // self.width
-                    else:
-                        self.hr_upscale_to_x = self.hr_resize_y * self.width // self.height
-                        self.hr_upscale_to_y = self.hr_resize_y
-
-                    self.truncate_x = (self.hr_upscale_to_x - target_w) // opt_f
-                    self.truncate_y = (self.hr_upscale_to_y - target_h) // opt_f
-
-            # special case: the user has chosen to do nothing
-            if self.hr_upscale_to_x == self.width and self.hr_upscale_to_y == self.height:
-                self.enable_hr = False
-                self.denoising_strength = None
-                self.extra_generation_params.pop("Hires upscale", None)
-                self.extra_generation_params.pop("Hires resize", None)
-                return
-
-            if not state.processing_has_refined_job_count:
-                if state.job_count == -1:
-                    state.job_count = self.n_iter
-
-                shared.total_tqdm.updateTotal((self.steps + (self.hr_second_pass_steps or self.steps)) * state.job_count)
-                state.job_count = state.job_count * 2
-                state.processing_has_refined_job_count = True
-
-            if self.hr_second_pass_steps:
-                self.extra_generation_params["Hires steps"] = self.hr_second_pass_steps
-
-            if self.hr_upscaler is not None:
-                self.extra_generation_params["Hires upscaler"] = self.hr_upscaler
-
-    def sample(self, conditioning, unconditional_conditioning, seeds, subseeds, subseed_strength, prompts):
-        self.sampler = sd_samplers.create_sampler(self.sampler_name, self.sd_model)
-
-        latent_scale_mode = shared.latent_upscale_modes.get(self.hr_upscaler, None) if self.hr_upscaler is not None else shared.latent_upscale_modes.get(shared.latent_upscale_default_mode, "nearest")
-        if self.enable_hr and latent_scale_mode is None:
-            assert len([x for x in shared.sd_upscalers if x.name == self.hr_upscaler]) > 0, f"could not find upscaler named {self.hr_upscaler}"
-
-        x = create_random_tensors([opt_C, self.height // opt_f, self.width // opt_f], seeds=seeds, subseeds=subseeds, subseed_strength=self.subseed_strength, seed_resize_from_h=self.seed_resize_from_h, seed_resize_from_w=self.seed_resize_from_w, p=self)
-        samples = self.sampler.sample(self, x, conditioning, unconditional_conditioning, image_conditioning=self.txt2img_image_conditioning(x))
-
-        if not self.enable_hr:
-            return samples
-
-        self.is_hr_pass = True
-
-        target_width = self.hr_upscale_to_x
-        target_height = self.hr_upscale_to_y
-
-        def save_intermediate(image, index):
-            """saves image before applying hires fix, if enabled in options; takes as an argument either an image or batch with latent space images"""
-
-            if not opts.save or self.do_not_save_samples or not opts.save_images_before_highres_fix:
-                return
-
-            if not isinstance(image, Image.Image):
-                image = sd_samplers.sample_to_image(image, index, approximation=0)
-
-            info = create_infotext(self, self.all_prompts, self.all_seeds, self.all_subseeds, [], iteration=self.iteration, position_in_batch=index)
-            images.save_image(image, self.outpath_samples, "", seeds[index], prompts[index], opts.samples_format, info=info, suffix="-before-highres-fix")
-
-        if latent_scale_mode is not None:
-            for i in range(samples.shape[0]):
-                save_intermediate(samples, i)
-
-            samples = torch.nn.functional.interpolate(samples, size=(target_height // opt_f, target_width // opt_f), mode=latent_scale_mode["mode"], antialias=latent_scale_mode["antialias"])
-
-            # Avoid making the inpainting conditioning unless necessary as
-            # this does need some extra compute to decode / encode the image again.
-            if getattr(self, "inpainting_mask_weight", shared.opts.inpainting_mask_weight) < 1.0:
-                image_conditioning = self.img2img_image_conditioning(decode_first_stage(self.sd_model, samples), samples)
-            else:
-                image_conditioning = self.txt2img_image_conditioning(samples)
-        else:
-            decoded_samples = decode_first_stage(self.sd_model, samples)
-            lowres_samples = torch.clamp((decoded_samples + 1.0) / 2.0, min=0.0, max=1.0)
-
-            batch_images = []
-            for i, x_sample in enumerate(lowres_samples):
-                x_sample = 255. * np.moveaxis(x_sample.cpu().numpy(), 0, 2)
-                x_sample = x_sample.astype(np.uint8)
-                image = Image.fromarray(x_sample)
-
-                save_intermediate(image, i)
-
-                image = images.resize_image(0, image, target_width, target_height, upscaler_name=self.hr_upscaler)
-                image = np.array(image).astype(np.float32) / 255.0
-                image = np.moveaxis(image, 2, 0)
-                batch_images.append(image)
-
-            decoded_samples = torch.from_numpy(np.array(batch_images))
-            decoded_samples = decoded_samples.to(shared.device)
-            decoded_samples = 2. * decoded_samples - 1.
-
-            samples = self.sd_model.get_first_stage_encoding(self.sd_model.encode_first_stage(decoded_samples))
-
-            image_conditioning = self.img2img_image_conditioning(decoded_samples, samples)
-
-        shared.state.nextjob()
-
-        img2img_sampler_name = self.sampler_name
-        if self.sampler_name in ['PLMS', 'UniPC']:  # PLMS/UniPC do not support img2img so we just silently switch to DDIM
-            img2img_sampler_name = 'DDIM'
-        self.sampler = sd_samplers.create_sampler(img2img_sampler_name, self.sd_model)
-
-        samples = samples[:, :, self.truncate_y//2:samples.shape[2]-(self.truncate_y+1)//2, self.truncate_x//2:samples.shape[3]-(self.truncate_x+1)//2]
-
-        noise = create_random_tensors(samples.shape[1:], seeds=seeds, subseeds=subseeds, subseed_strength=subseed_strength, p=self)
-
-        # GC now before running the next img2img to prevent running out of memory
-        x = None
-        devices.torch_gc()
-
-        samples = self.sampler.sample_img2img(self, samples, noise, conditioning, unconditional_conditioning, steps=self.hr_second_pass_steps or self.steps, image_conditioning=image_conditioning)
-
-        self.is_hr_pass = False
-
-        return samples
-
-
-class StableDiffusionProcessingImg2ImgEx(StableDiffusionProcessingEx):
+class StableDiffusionProcessingImg2ImgEx(StableDiffusionProcessingImg2Img):
     sampler = None
 
     def __init__(self, init_images: list = None, resize_mode: int = 0, denoising_strength: float = 0.75, image_cfg_scale: float = None, masks: list = None, mask_blur: int = 4, inpainting_fill: int = 0, inpaint_full_res: bool = True, inpaint_full_res_padding: int = 0, inpainting_mask_invert: int = 0, initial_noise_multiplier: float = None, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(
+            init_images=init_images,
+            resize_mode=resize_mode,
+            denoising_strength=denoising_strength,
+            image_cfg_scale=image_cfg_scale,
+            mask=None if masks is None else masks[0],
+            mask_blur=mask_blur,
+            inpainting_fill=inpainting_fill,
+            inpaint_full_res=inpaint_full_res,
+            inpaint_full_res_padding=inpaint_full_res_padding,
+            inpainting_mask_invert=inpainting_mask_invert,
+            initial_noise_multiplier=initial_noise_multiplier,
+            **kwargs)
 
         self.init_images = init_images
         self.resize_mode: int = resize_mode

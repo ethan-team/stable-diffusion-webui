@@ -5,6 +5,7 @@ import os
 
 from x_hacked_launch import build_args, prepare_environment, start
 
+
 def _setup_proxy():
     from xe_hack.xe_autodl_proxy import setup_autodl_proxy_env
     setup_autodl_proxy_env()
@@ -18,7 +19,11 @@ def _setup_data_and_symlinks():
 
 
 if __name__ == "__main__":
+    import sys
+
     os.environ["LANUCH_MODE"] = "normal:debug"
+    os.environ["LANGUAGE"] = "zh-cn"
+    # 从配置文件读取
 
     _setup_data_and_symlinks()
     _setup_proxy()
