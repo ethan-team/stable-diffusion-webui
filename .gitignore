@@ -46,3 +46,5 @@ notification.mp3
 /outputs_bak
 /interrogate_tmp
 /interrogate
+
+/server-config.json

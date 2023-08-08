@@ -17,13 +17,25 @@ def _setup_data_and_symlinks():
     #DataDirSetup.ensure_data_copied()
     SymlinkDirsSetup.ensure_working_dir()
 
+# 从server_conf.json读取配置，并设置环境变量
+def _init_configs():
+    os.environ["LANUCH_MODE"] = "normal:debug"
+    os.environ["LANGUAGE"] = "zh-cn"    
+
+    try:
+        # 读取server-config.json，解析，保存在os.environ中
+        with open('server-config.json', 'r') as f:
+            import json
+            configs = json.load(f)
+            for k, v in configs.items():
+                os.environ[k] = str(v)
+    except Exception as e:
+        print("Failed to load server-config.json, error: {}".format(e))
 
 if __name__ == "__main__":
     import sys
 
-    os.environ["LANUCH_MODE"] = "normal:debug"
-    os.environ["LANGUAGE"] = "zh-cn"
-    # 从配置文件读取
+    _init_configs()
 
     _setup_data_and_symlinks()
     _setup_proxy()
