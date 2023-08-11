@@ -69,13 +69,15 @@ def build_args(force_terminate_existing=False):
     HackingParams.prepare_env_vars()
     if HackingParams.need_extra_common_args():
         port = 6006
-        sys.argv.append("--share")
+        # sys.argv.append("--share")
         #sys.argv.append("--ngrok")
         #sys.argv.append("usr_2Paq6ztAK6hrq24bfpOUB9iZYqG")
         sys.argv.append("--port")
         sys.argv.append(f"{port}")
         sys.argv.append("--no-gradio-queue")
         sys.argv.append("--no-download-sd-model")
+        sys.argv.append("--api")
+        # sys.argv.append("--disable-tls-verify")
 
         sys.argv.append("--ldsr-models-path")
         sys.argv.append("/root/stable-diffusion-webui/models/LDSR")
