@@ -32,6 +32,7 @@ def _init_configs():
     except Exception as e:
         print("Failed to load server-config.json, error: {}".format(e))
 
+
 if __name__ == "__main__":
     import sys
 
@@ -43,16 +44,4 @@ if __name__ == "__main__":
     build_args(force_terminate_existing=True)
     prepare_environment()
 
-
-    import ssl
-
-    # 备份原ssl验证
-    orig_ssl_context = ssl._create_default_https_context
-    # 临时关闭ssl验证
-    ssl._create_default_https_context = ssl._create_unverified_context
-
-    try:
-        start()
-    finally:
-        # 恢复ssl验证
-        ssl._create_default_https_context = orig_ssl_context
+    start()
