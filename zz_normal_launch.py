@@ -3,7 +3,8 @@
 
 import os
 
-from x_hacked_launch import build_args, prepare_environment, start
+import x_hacked_launch
+from x_hacked_launch import build_args, init_pid, prepare_environment, start
 
 
 def _setup_proxy():
@@ -35,6 +36,8 @@ def _init_configs():
 
 if __name__ == "__main__":
     import sys
+
+    init_pid()
 
     _init_configs()
 

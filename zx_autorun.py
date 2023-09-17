@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import portalocker
-import time
 import os
-import sys
 import subprocess
+import sys
+import time
+
+import portalocker
 
 DIR_ROOT = os.path.dirname(__file__)
 

@@ -1,18 +1,20 @@
 # this scripts installs necessary requirements and launches main program in webui.py
-import subprocess
-import os
-import sys
 import importlib.util
-import shlex
-import platform
 import json
+import os
+import platform
+import shlex
+import subprocess
+import sys
 
 from modules import cmd_args
-from modules.paths_internal import script_path, extensions_dir
-from xe_hack.xe_params import HackingParams
+from modules.paths_internal import extensions_dir, script_path
 from xe_hack.xe_capture_output import resume_capture_all
+from xe_hack.xe_params import HackingParams
 
 args = None 
+plutus_pid = None
+
 
 def _print_args(args):
     print("Dump args:")
@@ -35,8 +37,9 @@ def _check_if_port_is_used(port):
             return True
 
 def _force_terminate_existing_process():
-    import psutil
     import time
+
+    import psutil
     for proc in psutil.process_iter():
         try:
             cmdline = proc.cmdline()
@@ -60,6 +63,15 @@ def _force_terminate_existing_process():
 
         except: # noqa:
             pass     
+
+
+def init_pid():
+    import uuid
+    
+    global plutus_pid
+    plutus_pid = str(f'plutus_pid-{uuid.uuid4()}')
+    print(f"plutus_pid: {plutus_pid}")
+
 
 def build_args(force_terminate_existing=False):
     global args
@@ -401,7 +413,7 @@ def prepare_environment():
 
     if args.update_all_extensions:
         git_pull_recursive(extensions_dir)
-    
+
     if "--exit" in sys.argv:
         print("Exiting because of --exit argument")
         exit(0)
