@@ -48,4 +48,5 @@ notification.mp3
 /interrogate
 
 /server-config.json
+/server_config.json
 .qiniu_pythonsdk_hostscache.json

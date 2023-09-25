@@ -21,7 +21,7 @@ def _setup_data_and_symlinks():
 # 从server_conf.json读取配置，并设置环境变量
 def _init_configs():
     os.environ["LAUNCH_MODE"] = "normal:debug"
-    os.environ["LANGUAGE"] = "zh-cn"    
+    os.environ["LANGUAGE"] = "zh-cn"
 
     try:
         # 读取server-config.json，解析，保存在os.environ中
