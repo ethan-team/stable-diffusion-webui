@@ -24,3 +24,15 @@ step2)
         if processed is None:
             # ethan_hack: focuse the performance issue here
             processed = process_images(p)     
+
+
+environment:
+CUDA Driver Version 12.2
+Python version  3.10.6
+
+torch           2.0.0+cu118 
+torchvision     0.15.1+cu118 
+transformers    4.25.1 
+
+no xformer
+
