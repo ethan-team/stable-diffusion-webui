@@ -1,0 +1,9 @@
+step1)
+ zz_normal_launch.py 
+
+step2)
+  open webpage 
+  go to img2img tab 
+  test image: tmp_mannequin/Speedup_testjpg
+  instruction: https://ii7xb4g1ud.feishu.cn/minutes/obcnrj1975q59ai438n722yt
+
