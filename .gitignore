@@ -49,3 +49,4 @@ notification.mp3
 
 /server-config.json
 .qiniu_pythonsdk_hostscache.json
+/tmp_mannequin
