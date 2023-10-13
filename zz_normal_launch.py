@@ -36,6 +36,9 @@ def _init_configs():
 
 if __name__ == "__main__":
     import sys
+    from xe_hack.xe_capture_output import resume_capture_all
+
+    resume_capture_all()
 
     init_pid()
 

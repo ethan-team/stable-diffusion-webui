@@ -14,6 +14,7 @@ from xe_hack.xe_params import HackingParams
 
 args = None 
 plutus_pid = None
+work_idk = None
 
 
 def _print_args(args):

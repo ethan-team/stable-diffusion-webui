@@ -1,54 +1,78 @@
+from logging.handlers import TimedRotatingFileHandler
 import sys
 import os
 import threading
 import logging
 from datetime import datetime
 from collections import namedtuple  
+from logging import FileHandler
 
-DIR_ROOT = os.path.dirname(os.path.dirname(__file__))
+from torch import log_
 
-LOG_SYS_OUTPUT = f"{DIR_ROOT}/log/sys_stdout.txt"
-LOG_DEFAULT = f"{DIR_ROOT}/log/sys_logging.log"
-LOG_ROUND_FILENAME = f"{DIR_ROOT}/log/hook_round.log"
-LOG_SYS_HOOK = f"{DIR_ROOT}/log/hook_thread.log"
+# DIR_ROOT = os.path.dirname(os.path.dirname(__file__))
+DIR_ROOT = "/root/autodl-tmp/plutus_log"
+
+# LOG_ROUND_FILENAME = f"{DIR_ROOT}/plutus_log/hook_round.log"
+# LOG_SYS_HOOK = f"{DIR_ROOT}/plutus_log/hook_thread.log"
 
 
 THREAD_MEMO = namedtuple('THEAD_MEMO', 'obj_sys_stdout, obj_sys_stderr, obj_log_handler')
 gmap_thread_memo = {}
 
-gf_round_num = None
 gf_round_sys_stdout = False 
 gf_round_log_handler = False 
+log_writing_locked = False
 
-try:
-    os.makedirs(os.path.dirname(LOG_DEFAULT), exist_ok=True)
-except:  # noqa
-    pass
+current_work_idk = None
+logger_webui: logging.Logger | None = None
+
+def get_webui_logger() -> logging.Logger | None:
+    global logger_webui
+    global current_work_idk
+    import x_hacked_launch
+
+    # if x_hacked_launch.work_idk is None:
+    #     return None
+
+    if logger_webui is None:
+        current_work_idk = x_hacked_launch.work_idk
+        logger_webui = _create_webui_logger()
+    elif x_hacked_launch.work_idk != current_work_idk:
+        current_work_idk = x_hacked_launch.work_idk
+        logger_webui = _create_webui_logger()
+
+    return logger_webui
+
+
+def _create_webui_logger() -> logging.Logger:
+    global current_work_idk
+
+    os.makedirs(os.path.join(DIR_ROOT, 'works'), exist_ok=True)
+
+    if current_work_idk is None:
+        ret = logging.getLogger("webui")
+    else:
+        ret = logging.getLogger(current_work_idk)
+    ret.setLevel(logging.DEBUG)  # 你可以设置不同的日志级别
+
+    if len(ret.handlers) == 0:
+        if current_work_idk is not None:
+            fh = FileHandler(os.path.join(DIR_ROOT, f'works/{current_work_idk}.log'))  # 输出到文件的 Handler
+        else:
+            fh = TimedRotatingFileHandler(os.path.join(DIR_ROOT, 'webui.log'), when='midnight', interval=1, backupCount=7)  # 输出到文件的 Handler
+
+        fh.setLevel(logging.DEBUG)  # 输出到文件的日志级别
+        fh_formatter = logging.Formatter('%(asctime)s [ThreadID: %(thread)d] [%(levelname)s]: %(message)s')
+        fh.setFormatter(fh_formatter)
+
+        ret.addHandler(fh)
+
+    return ret
 
 
 def _get_launch_mode():
     launch_mdoe = os.environ.get("LANUCH_MODE", "normal")
     return launch_mdoe
-
-def _get_round_tag():
-    global gf_round_num
-    if gf_round_num is None:
-        round = 1
-        try:
-            if os.path.isfile(LOG_ROUND_FILENAME):
-                with open(LOG_ROUND_FILENAME, 'r') as f:
-                    lines = f.readlines()
-                    line = lines[-1]
-                    round = int(line)
-
-                round += 1
-            with open(LOG_ROUND_FILENAME, 'w+') as f:
-                f.write(f"{round}\n")
-        except: # noqa
-            pass
-        gf_round_num = round
-    round_tag = f"\'round {gf_round_num}\' @ {datetime.now()}"
-    return gf_round_num, round_tag
 
 
 class _StdoutCapture:
@@ -64,14 +88,23 @@ class _StdoutCapture:
             sys.stdout = self.org_stdout
 
     def write(self, text):
+        global log_writing_locked
+
+        if log_writing_locked:
+            return
+        
+        log_writing_locked = True
         # Process the captured output as needed
         # For example, you can write it to a file, store it in a variable, etc.
         try:
-            with open(LOG_SYS_OUTPUT, 'a+') as f:
-                f.write(text)
-            self.org_stdout.write(text)
+            logger = get_webui_logger()
+            if logger is not None:
+                logger.info(text)
+            # self.org_stdout.write(text)
         except: # noqa
             pass
+        finally:
+            log_writing_locked = False
 
     def flush(self):
         if hasattr(self, 'org_stdout'):
@@ -79,7 +112,7 @@ class _StdoutCapture:
 
     def isatty(self):
         return True
-    
+
     def __getattr__(self, name):
         # Forward any other attribute access to the original sys.stdout
         if hasattr(self, 'org_stdout'):
@@ -88,12 +121,13 @@ class _StdoutCapture:
 
 def _hook_sys_stdout(obj_sys_stdout):
     global gf_round_sys_stdout
+    # round_tag = None
     if obj_sys_stdout is not None and hasattr(obj_sys_stdout, "attach"):
         obj_sys_stdout.attach()
-        _, round_tag = _get_round_tag()
+        # _, round_tag = _get_round_tag()
 
     if not gf_round_sys_stdout:
-        print(f"\n\n{round_tag}\n\n")
+        # print(f"\n\n{round_tag}\n\n")
         gf_round_sys_stdout = True
 
 def _unhook_sys_stdout(obj_sys_stdout):
@@ -113,14 +147,27 @@ class _StderrCapture:
             sys.stderr = self.org_stderr
 
     def write(self, text):
+        global log_writing_locked
+
+        if log_writing_locked:
+            return
+        
+        log_writing_locked = True
         # Process the captured output as needed
         # For example, you can write it to a file, store it in a variable, etc.
+
         try:
-            with open(LOG_SYS_OUTPUT, 'a+') as f:
-                f.write(text)
-            self.org_stderr.write(text)
+            # get_webui_logger().error(text)
+            logger = get_webui_logger()
+            if logger is not None:
+                logger.error(text)
+            # with open(LOG_SYS_OUTPUT, 'a+') as f:
+            #     f.write(text)
+            # self.org_stderr.write(text)
         except: # noqa
             pass
+        finally:
+            log_writing_locked = False
 
     def flush(self):
         if hasattr(self, 'org_stderr'):
@@ -128,7 +175,7 @@ class _StderrCapture:
 
     def isatty(self):
         return True
-    
+
     def __getattr__(self, name):
         # Forward any other attribute access to the original sys.stdout
         if hasattr(self, 'org_stderr'):
@@ -139,10 +186,8 @@ def _hook_sys_stderr(obj_sys_stderr):
     global gf_round_sys_stdout
     if obj_sys_stderr is not None and hasattr(obj_sys_stderr, "attach"):
         obj_sys_stderr.attach()
-        _, round_tag = _get_round_tag()
 
     if not gf_round_sys_stdout:
-        print(f"\n\n{round_tag}\n\n")
         gf_round_sys_stdout = True
 
 def _unhook_sys_stderr(obj_sys_stderr):
@@ -188,47 +233,45 @@ def _hook_logging_capture_handler(obj_logger_handler):
     # Attach the file handler to all loggers
     for logger in all_loggers:
         if hasattr(logger, "addHandler") and hasattr(logger, "handlers"):
+            # 判断logger是否Logger类型
+            if not isinstance(logger, logging.Logger):
+                continue
+
             if obj_logger_handler not in logger.handlers:
                 logger.addHandler(obj_logger_handler)
 
     if not gf_round_log_handler:
-        _, round_tag = _get_round_tag()
-        root_logger.info("  ")
-        root_logger.info("  ")
-        root_logger.info(f"{round_tag}")
-        root_logger.info("  ")
-        root_logger.info("  ")
         gf_round_log_handler = True
 
 
 def _unhook_logging_capture_handler(obj_logger_handler):
     pass
 
-def _log_hook_thread():
-    try:
-        import os
-        import asyncio
-        
-        thread_id = threading.get_ident()
-        pid = os.getpid()
+# def _log_hook_thread():
+#     try:
+#         import os
+#         import asyncio
 
-        loop_id = None
-        try:
-            loop_id = asyncio.get_running_loop().__hash__()
-        except: # noqa
-            pass
-        
-        msg = f'pid:{pid} thid:{thread_id} lpid:{loop_id}\n'
-        with open(LOG_SYS_HOOK, 'a+') as f:
-            f.write(msg)
-    except: # noqa
-        pass
+#         thread_id = threading.get_ident()
+#         pid = os.getpid()
+
+#         loop_id = None
+#         try:
+#             loop_id = asyncio.get_running_loop().__hash__()
+#         except: # noqa
+#             pass
+
+#         # msg = f'pid:{pid} thid:{thread_id} lpid:{loop_id}\n'
+#         # with open(LOG_SYS_HOOK, 'a+') as f:
+#         #     f.write(msg)
+#     except: # noqa
+#         pass
 
 def _hook_thread():
     global gmap_thread_memo
     thread_id = threading.get_ident()
     if thread_id not in gmap_thread_memo:
-        _log_hook_thread()
+        # _log_hook_thread()
 
         # Start capturing the output
         obj_sys_stdout = _StdoutCapture()
@@ -237,15 +280,14 @@ def _hook_thread():
         obj_sys_stderr = _StderrCapture()
         _hook_sys_stderr(obj_sys_stderr)
 
-        obj_log_handler = _PlainLoggerHandler(LOG_DEFAULT)
-        _hook_logging_capture_handler(obj_log_handler)
-        
-        gmap_thread_memo[thread_id] = THREAD_MEMO(obj_sys_stdout=obj_sys_stdout, 
-                                                  obj_sys_stderr=obj_sys_stderr,
-                                                  obj_log_handler=obj_log_handler)
+        # _hook_logging_capture_handler(obj_log_handler)
+
+        # gmap_thread_memo[thread_id] = THREAD_MEMO(obj_sys_stdout=obj_sys_stdout, 
+        #                                           obj_sys_stderr=obj_sys_stderr,
+        #                                           obj_log_handler=obj_log_handler)
         print(f"_hook_thead {thread_id}")
 
-    return gmap_thread_memo[thread_id]
+    # return gmap_thread_memo[thread_id]
 
 def _unhook_thread():
     pass
