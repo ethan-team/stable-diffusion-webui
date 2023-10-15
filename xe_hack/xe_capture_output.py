@@ -100,7 +100,7 @@ class _StdoutCapture:
             logger = get_webui_logger()
             if logger is not None:
                 logger.info(text)
-            # self.org_stdout.write(text)
+            self.org_stdout.write(text)
         except: # noqa
             pass
         finally:
@@ -163,7 +163,7 @@ class _StderrCapture:
                 logger.error(text)
             # with open(LOG_SYS_OUTPUT, 'a+') as f:
             #     f.write(text)
-            # self.org_stderr.write(text)
+            self.org_stderr.write(text)
         except: # noqa
             pass
         finally:
