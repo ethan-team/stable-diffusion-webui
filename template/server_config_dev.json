@@ -1,4 +1,5 @@
 {
     "redis_url": "redis://:BbHqAbG5tU@api.test.musedraw.art:6377/1",
-    "qiniu_prefix_result": "plutus/dev/"
+    "qiniu_prefix_result": "plutus/dev/",
+    "server_domain": "https://adgen-api.test.musedraw.com/"
 }
